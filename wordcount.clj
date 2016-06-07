@@ -138,7 +138,7 @@
 
       all
       (let [{:keys [line words chars] :as res} (naive-wordcount-all (slurp file))]
-        (cl-format true "line~p: ~d word~p: ~d char~p: ~d\n" line line words words chars chars)
+        (cl-format true "line~p: ~:*~d word~p: ~:*~d char~p: ~:*~d" line words chars)
         res)
 
       ;; Note: for usual text files the default is more than enough
