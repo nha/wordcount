@@ -1,15 +1,13 @@
 #!/usr/bin/env boot
 
-
-(set-env! :dependencies '[[org.clojure/clojure "1.9.0-alpha3"]
+(set-env! :dependencies '[[org.clojure/clojure "1.9.0-alpha9"]
                           [org.clojure/tools.cli "0.3.3"]
-                          [tailrecursion/boot.core "2.5.1"]
+                          [boot/core "2.6.0"]
                           ;;[tesser.core "1.0.1"]
-                          [prismatic/schema "1.1.1"]
-
-                          ])
+                          [prismatic/schema "1.1.2"]])
 
 (require  '[clojure.java.io :as io]
+          '[clojure.core.reducers :as r]
           '[boot.cli :refer [defclifn]]
           ;;'[tesser.simple :as tesser :refer []]
           ;;'[tesser.core :as t :refer[]]
@@ -18,9 +16,9 @@
           '[clojure.pprint :refer [cl-format]])
 
 ;;
-;; For CLI script I tend to use boot
+;; For CLI scripts I tend to use boot
 ;; since it can then be integrated in the tooling easily
-;; Also for script I tend to embed the tests in the same file
+;; Also for scripts I tend to embed the tests in the same file
 ;; as they double as REPLable expressions - I start writing them without asserts inside a (comment ... ) form.
 ;; Although I have been experimenting with this style for bigger projects it does not quite work as well since there is often a need for setup and tear-down
 ;; I did use midje at some point but ran into edge cases where I was working against the DSL so I use plain clojure.test now. Expectations could be worth a try
@@ -123,11 +121,22 @@
       ;; and use parallel operations
       (with-open [rdr (clojure.java.io/reader filepath)]
         (let [lseq (line-seq rdr)
-              res (->>
-                   (pmap naive-wordcount lseq)
-                   (reduce + 0)
-                   ;;(tesser.simple/reduce + 0)
-                   )]
+
+              ;; res (->>
+              ;;      (map naive-wordcount lseq)
+              ;;      (reduce + 0))
+
+              ;; res (->>
+              ;;      (r/map naive-wordcount lseq)
+              ;;      (r/reduce + 0))
+
+              res (r/fold + (fn [memo word]
+                              (+ memo (naive-wordcount word))) lseq)
+
+              ;; res (->>
+              ;;      (pmap naive-wordcount lseq)
+              ;;      (tesser.simple/reduce + 0))
+              ]
           (println res)
           res))
 
@@ -141,9 +150,6 @@
         (cl-format true "line~p: ~:*~d word~p: ~:*~d char~p: ~:*~d" line words chars)
         res)
 
-      ;; Note: for usual text files the default is more than enough
-      ;; For instance the entire work of Shakespeare (plus licence information etc.) is about 5.5M (which is bigger than /usr/dict/words)
-      ;; and in this case this naive implementation still outperforms the parallel in my machine
       :default
       (let [res (naive-wordcount (slurp file))]
         (println res)
@@ -162,8 +168,8 @@
   (time (wordcount "test/resources/big.txt"  :parallel true))
   (time (wordcount "test/resources/t8.shakespeare.txt"  :parallel true))
   ;; after this point the non-naive version is faster (on my laptop)
-  (time (wordcount "test/resources/loreum.txt"  :parallel true)) ;; 36MB
-  (time (wordcount "test/resources/loreum.txt")) ;; 36MB
+  (time (wordcount "test/resources/loreum.txt"  :parallel true)) ;; 36MB 1.2 sec
+  (time (wordcount "test/resources/loreum.txt")) ;; 36MB 3.1 sec
   )
 
 ;;
@@ -191,10 +197,14 @@
 
 
 (comment
-  (time (run-tests)) ;; {:test 7, :pass 44, :fail 0, :error 0, :type :summary} in 4.8 sec
+  (time (run-tests)) ;; {:test 7, :pass 44, :fail 0, :error 0, :type :summary} in 4.3 sec
   )
 
+(comment
 
+  (reduce ( mapping inc))
+
+  )
 
 ;;;;;;;;;;
 ;; Quiz ;;
