@@ -114,7 +114,7 @@
 
     (cond
 
-      (not (.exists file)) (do (println "The file does not exists")
+      (not (.exists file)) (do (println "The file" (.getPath file) " does not exists")
                                nil)
 
       parallel
@@ -230,7 +230,7 @@
   (quiz "ab") ;;=> "ab" -> 1-arity called directly: the inline form is used
   (map quiz [[3 4 5 "a" "b" \c ]]) ;;=> ("369") -> quiz is passed as parameter, the first element has to be odd cannot be destructured
 
-  (quiz 5 3)  ;; 5 is odd and bigger than 3 =>
+  (quiz 5 3)  ;; 5 is odd and bigger than 3 => 2.0
   (quiz 7 8 9)
   )
 
